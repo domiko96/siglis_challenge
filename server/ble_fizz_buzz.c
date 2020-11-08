@@ -51,21 +51,21 @@ static void on_write(ble_fizz_buzz_t * p_fizz_buzz, ble_evt_t const * p_ble_evt)
     // Custom Value Characteristic Written to.
     if (p_evt_write->handle == p_fizz_buzz->fizz_buzz_value_handles.value_handle)
     {
-        nrf_gpio_pin_toggle(LED_4);
-        /*
+        //nrf_gpio_pin_toggle(1);
         if(*p_evt_write->data == 0x01)
         {
-            nrf_gpio_pin_clear(20); 
+            NRF_LOG_INFO("LED should be off");
+            nrf_gpio_pin_clear(BSP_BOARD_LED_3); 
         }
         else if(*p_evt_write->data == 0x02)
         {
-            nrf_gpio_pin_set(20); 
+            NRF_LOG_INFO("LED should be on");
+            nrf_gpio_pin_set(BSP_BOARD_LED_3); 
         }
         else
         {
-          //Do nothing
+           NRF_LOG_INFO("Your sending data in a very strange format wtf :OOOO");
         }
-        */
     }
 
     // Check if the Custom value CCCD is written to and that the value is the appropriate length, i.e 2 bytes.
@@ -134,7 +134,7 @@ void ble_fizz_buzz_on_ble_evt( ble_evt_t const * p_ble_evt, void * p_context)
  *
  * @return      NRF_SUCCESS on success, otherwise an error code.
  */
-/*static uint32_t custom_value_char_add(ble_fizz_buzz_t * p_fizz_buzz, const ble_fizz_buzz_init_t * p_fizz_buzz_init)
+static uint32_t fizz_buzz_custom_value_char_add(ble_fizz_buzz_t * p_fizz_buzz, const ble_fizz_buzz_init_t * p_fizz_buzz_init)
 {
     uint32_t            err_code;
     ble_gatts_char_md_t char_md;
@@ -194,7 +194,6 @@ void ble_fizz_buzz_on_ble_evt( ble_evt_t const * p_ble_evt, void * p_context)
 
     return NRF_SUCCESS;
 }
-*/
 
 uint32_t ble_fizz_buzz_init(ble_fizz_buzz_t * p_fizz_buzz, const ble_fizz_buzz_init_t * p_fizz_buzz_init)
 {
@@ -229,12 +228,12 @@ uint32_t ble_fizz_buzz_init(ble_fizz_buzz_t * p_fizz_buzz, const ble_fizz_buzz_i
         return err_code;
     }
 
-    return err_code;
+    
     // Add Custom Value characteristic
-    //return custom_value_char_add(p_fizz_buzz, p_fizz_buzz_init);
+    return fizz_buzz_custom_value_char_add(p_fizz_buzz, p_fizz_buzz_init);
 }
 
-uint32_t ble_cus_custom_value_update(ble_fizz_buzz_t * p_fizz_buzz, uint8_t custom_value)
+uint32_t ble_fizz_buzz_custom_value_update(ble_fizz_buzz_t * p_fizz_buzz, uint8_t custom_value)
 {
     NRF_LOG_INFO("In ble_cus_custom_value_update. \r\n"); 
     if (p_fizz_buzz == NULL)
