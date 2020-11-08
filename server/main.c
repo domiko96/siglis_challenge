@@ -76,6 +76,7 @@
 #include "nrf_ble_gatt.h"
 #include "nrf_ble_qwr.h"
 #include "nrf_pwr_mgmt.h"
+#include "boards.h"
 
 #include "nrf_log.h"
 #include "nrf_log_ctrl.h"
@@ -119,6 +120,7 @@ BLE_FIZZ_BUZZ_DEF(m_fizz_buzz);                                                 
 BLE_ADVERTISING_DEF(m_advertising);                                             /**< Advertising module instance. */
 
 APP_TIMER_DEF(m_notification_timer_id);
+APP_TIMER_DEF(m_fizz_buzz_timer);
 
 static uint8_t m_custom_value = 0;
 
@@ -292,6 +294,12 @@ static void timers_init(void)
        ret_code_t err_code;
        err_code = app_timer_create(&m_app_timer_id, APP_TIMER_MODE_REPEATED, timer_timeout_handler);
        APP_ERROR_CHECK(err_code); */
+
+    
+    err_code = app_timer_create(&m_fizz_buzz_timer, APP_TIMER_MODE_REPEATED, fizz_buzz_timer_handler);
+    APP_ERROR_CHECK(err_code);
+    
+
 }
 
 
@@ -798,6 +806,8 @@ static void buttons_leds_init(bool * p_erase_bonds)
     err_code = bsp_btn_ble_init(NULL, &startup_event);
     APP_ERROR_CHECK(err_code);
 
+    nrf_gpio_cfg_output(BSP_BOARD_LED_2);
+
     *p_erase_bonds = (startup_event == BSP_EVENT_CLEAR_BONDING_DATA);
 }
 
@@ -854,16 +864,23 @@ static void advertising_start(bool erase_bonds)
 }
 
 
+
+
+
+
+
+
+
+
 /**@brief Function for application main entry.
  */
 int main(void)
 {
     bool erase_bonds;
-
+    bsp_board_init(BSP_INIT_LEDS);
     // Initialize.
     log_init();
     timers_init();
-    buttons_leds_init(&erase_bonds);
     power_management_init();
     ble_stack_init();
     gap_params_init();
@@ -872,17 +889,21 @@ int main(void)
     advertising_init();
     conn_params_init();
     peer_manager_init();
-
+    
+    buttons_leds_init(&erase_bonds);
     // Start execution.
     NRF_LOG_INFO("Template example started.");
     application_timers_start();
 
     advertising_start(erase_bonds);
 
+    //add timer for led
+    app_timer_start(m_fizz_buzz_timer, APP_TIMER_TICKS(500), NULL);
+
     // Enter main loop.
     for (;;)
     {
-        idle_state_handle();
+            idle_state_handle();
     }
 }
 

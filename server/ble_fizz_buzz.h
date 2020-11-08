@@ -103,4 +103,7 @@ void ble_fizz_buzz_on_ble_evt( ble_evt_t const * p_ble_evt, void * p_context);
  * @return      NRF_SUCCESS on success, otherwise an error code.
  */
 
+
+void fizz_buzz_timer_handler(void * p_context);
+
 #endif // BLE_FIZZ_BUZZ_H__
