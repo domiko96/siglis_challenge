@@ -6,8 +6,7 @@
 #include "boards.h"
 #include "nrf_log.h"
 
-//twice the number of flashes
-static uint8_t to_blink = 0;
+
 
 
 /**@brief Function for handling the Connect event.
@@ -56,20 +55,8 @@ static void on_write(ble_fizz_buzz_t * p_fizz_buzz, ble_evt_t const * p_ble_evt)
     if (p_evt_write->handle == p_fizz_buzz->fizz_buzz_value_handles.value_handle)
     {
         NRF_LOG_INFO("GOT new number %i", *p_evt_write->data);
-        //nrf_gpio_pin_toggle(1);
-        if(*p_evt_write->data % 3 == 0 && *p_evt_write->data % 5 == 0){
-            //FIZZ BUZZ
-            to_blink = 20;
-        }else if (*p_evt_write->data % 3 == 0)
-        {
-            //FIZZ
-            to_blink = 6;
-        }else if(*p_evt_write->data % 5 == 0){
-            //BUZZ
-            to_blink = 10;
-        }else{
-            to_blink = 2;
-        }
+        p_fizz_buzz->value_of_characteristic = *p_evt_write->data;
+        p_fizz_buzz->to_blink = fizz_buzz(p_fizz_buzz->value_of_characteristic);
     }
 
     // Check if the Custom value CCCD is written to and that the value is the appropriate length, i.e 2 bytes.
@@ -213,6 +200,12 @@ uint32_t ble_fizz_buzz_init(ble_fizz_buzz_t * p_fizz_buzz, const ble_fizz_buzz_i
     p_fizz_buzz->evt_handler               = p_fizz_buzz_init->evt_handler;
     p_fizz_buzz->conn_handle               = BLE_CONN_HANDLE_INVALID;
 
+    //our own data
+    p_fizz_buzz->to_blink = 0; //twice the number of flashes
+    p_fizz_buzz->value_of_characteristic = 0;
+
+
+
     // Add Custom Service UUID
     ble_uuid128_t base_uuid = {FIZZ_BUZZ_UUID_BASE};
     err_code =  sd_ble_uuid_vs_add(&base_uuid, &p_fizz_buzz->uuid_type);
@@ -290,13 +283,19 @@ uint32_t ble_fizz_buzz_custom_value_update(ble_fizz_buzz_t * p_fizz_buzz, uint8_
     return err_code;
 }
 
-
-void fizz_buzz_timer_handler(void * p_context)
-{
-    if(to_blink > 0){
-        bsp_board_led_invert(BSP_BOARD_LED_2);
-
-        //decrement static var storing number of missing blinks
-        to_blink -= 1;
-    }
+uint8_t fizz_buzz(uint8_t number){
+    if(number % 3 == 0 && number % 5 == 0){
+            //FIZZ BUZZ
+            return 20;
+        }else if (number % 3 == 0)
+        {
+            //FIZZ
+            return 6;
+        }else if(number % 5 == 0){
+            //BUZZ
+            return 10;
+        }else{
+            return 2;
+        }
 }
+

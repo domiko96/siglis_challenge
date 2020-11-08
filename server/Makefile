@@ -57,7 +57,6 @@ SRC_FILES += \
   $(SDK_ROOT)/components/libraries/bsp/bsp.c \
   $(SDK_ROOT)/components/libraries/bsp/bsp_btn_ble.c \
   $(SDK_ROOT)/components/libraries/gpiote/app_gpiote.c \
-  $(SDK_ROOT)/components/libraries/timer/app_timer.c \
   $(PROJ_DIR)/main.c \
   $(PROJ_DIR)/ble_fizz_buzz.c \
   $(SDK_ROOT)/external/segger_rtt/SEGGER_RTT.c \
@@ -86,7 +85,7 @@ SRC_FILES += \
   $(SDK_ROOT)/components/softdevice/common/nrf_sdh.c \
   $(SDK_ROOT)/components/softdevice/common/nrf_sdh_ble.c \
   $(SDK_ROOT)/components/softdevice/common/nrf_sdh_soc.c \
-  
+  #$(SDK_ROOT)/components/libraries/timer/app_timer.c \
 
 # Include folders common to all targets
 INC_FOLDERS += \
@@ -221,7 +220,7 @@ INC_FOLDERS += \
   $(SDK_ROOT)/components/libraries/stack_guard \
   $(SDK_ROOT)/components/libraries/log/src \
   $(SDK_ROOT)/components/libraries/gpiote \
-  $(SDK_ROOT)/components/libraries/timer \
+  #$(SDK_ROOT)/components/libraries/timer \
 
 # Libraries common to all targets
 LIB_FILES += \

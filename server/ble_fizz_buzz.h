@@ -6,6 +6,9 @@
 #include "ble.h"
 #include "ble_srv_common.h"
 
+
+
+
 /**@brief   Macro for defining a ble_hrs instance.
  *
  * @param   _name   Name of the instance.
@@ -61,6 +64,8 @@ struct ble_fizz_buzz_s
     ble_gatts_char_handles_t      fizz_buzz_value_handles;           /**< Handles related to the Custom Value characteristic. */
     uint16_t                      conn_handle;                    /**< Handle of the current connection (as provided by the BLE stack, is BLE_CONN_HANDLE_INVALID if not in a connection). */
     uint8_t                       uuid_type; 
+    uint8_t                       to_blink; //twice the number of flashes
+    uint8_t                       value_of_characteristic;
 };
 
 /**@brief Function for initializing the Custom Service.
@@ -105,5 +110,7 @@ void ble_fizz_buzz_on_ble_evt( ble_evt_t const * p_ble_evt, void * p_context);
 
 
 void fizz_buzz_timer_handler(void * p_context);
+
+uint8_t fizz_buzz(uint8_t number);
 
 #endif // BLE_FIZZ_BUZZ_H__

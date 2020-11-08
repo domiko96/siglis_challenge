@@ -83,9 +83,10 @@
 #include "nrf_log_default_backends.h"
 #include "ble_fizz_buzz.h"
 
-#include "nrf_gpio.h"
-#include "app_timer.h"
-#include "app_gpiote.h"
+//buttons
+#include "nrf_drv_gpiote.h"
+
+
 
 
 
@@ -135,7 +136,8 @@ BLE_ADVERTISING_DEF(m_advertising);                                             
 APP_TIMER_DEF(m_notification_timer_id);
 APP_TIMER_DEF(m_fizz_buzz_timer);
 
-static uint8_t m_custom_value = 0;
+//value for us
+//static uint8_t m_custom_value = 0;
 
 static uint16_t m_conn_handle = BLE_CONN_HANDLE_INVALID;                        /**< Handle of the current connection. */
 
@@ -280,9 +282,9 @@ static void notification_timeout_handler(void * p_context)
     ret_code_t err_code;
     
     // Increment the value of m_custom_value before nortifing it.
-    m_custom_value++;
+    // m_custom_value++;
     
-    err_code = ble_fizz_buzz_custom_value_update(&m_fizz_buzz, m_custom_value);
+    err_code = ble_fizz_buzz_custom_value_update(&m_fizz_buzz, m_fizz_buzz.value_of_characteristic);
     APP_ERROR_CHECK(err_code);
 }
 
@@ -770,6 +772,11 @@ static void bsp_event_handler(bsp_event_t event)
             }
             break; // BSP_EVENT_KEY_0
 
+        case BSP_EVENT_KEY_3:
+            NRF_LOG_INFO("BSP EVENT button 3");
+            m_fizz_buzz.value_of_characteristic++;
+            m_fizz_buzz.to_blink = fizz_buzz(m_fizz_buzz.value_of_characteristic);
+
         default:
             break;
     }
@@ -876,35 +883,15 @@ static void advertising_start(bool erase_bonds)
     }
 }
 
-static void button_handler(uint8_t pin_no, uint8_t button_action)
+void fizz_buzz_timer_handler(void * p_context)
 {
-    if(button_action == APP_BUTTON_PUSH)
-    {
-        switch(pin_no)
-        {
-            case BUTTON_1:
-                NRF_LOG_INFO("TADA");
-                break;
-            case BUTTON_2:
-                NRF_LOG_INFO("TADA");
-                break;
-            case BUTTON_3:
-                NRF_LOG_INFO("TADA");
-                break;
-            case BUTTON_4:
-                NRF_LOG_INFO("TADA");
-                break;
-            default:
-                break;
-        }
+    if(m_fizz_buzz.to_blink > 0){
+        bsp_board_led_invert(BSP_BOARD_LED_2);
+
+        //decrement static var storing number of missing blinks
+        m_fizz_buzz.to_blink -= 1;
     }
 }
-
-
-
-
-
-
 
 
 /**@brief Function for application main entry.
@@ -925,7 +912,10 @@ int main(void)
     conn_params_init();
     peer_manager_init();
     
+    
     buttons_leds_init(&erase_bonds);
+
+
     // Start execution.
     NRF_LOG_INFO("Template example started.");
     application_timers_start();
@@ -936,28 +926,6 @@ int main(void)
     app_timer_start(m_fizz_buzz_timer, APP_TIMER_TICKS(500), NULL);
 
     
-    NRF_LOG_INFO("hierhierhier");
-    // Initializing the buttons.
-    // Button configuration structure.
-    
-    APP_TIMER_INIT(APP_TIMER_PRESCALER, APP_TIMER_MAX_TIMERS, APP_TIMER_OP_QUEUE_SIZE, NULL);
-
-    static app_button_cfg_t p_button[] = {{BUTTON_3, APP_BUTTON_ACTIVE_LOW, NRF_GPIO_PIN_PULLUP, button_handler}};
-    uint32_t err_code;
-    APP_GPIOTE_INIT(APP_GPIOTE_MAX_USERS);
-    NRF_LOG_INFO("hierhierhier v.2.9");
-
-    err_code = app_button_init(p_button, sizeof(p_button) / sizeof(p_button[0]), BUTTON_DEBOUNCE_DELAY);
-    APP_ERROR_CHECK(err_code);
-
-    NRF_LOG_INFO("button init");
-
-
-    // Enabling the buttons.										
-    err_code = app_button_enable();
-    APP_ERROR_CHECK(err_code);
-    NRF_LOG_INFO("button enabled");
-
     // Enter main loop.
     for (;;)
     {
