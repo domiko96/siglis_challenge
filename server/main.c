@@ -923,7 +923,7 @@ int main(void)
     advertising_start(erase_bonds);
 
     //add timer for led
-    app_timer_start(m_fizz_buzz_timer, APP_TIMER_TICKS(500), NULL);
+    app_timer_start(m_fizz_buzz_timer, APP_TIMER_TICKS(150), NULL);
 
     
     // Enter main loop.
