@@ -82,6 +82,9 @@
 #include "nrf_log_ctrl.h"
 #include "nrf_log_default_backends.h"
 
+//custom service
+#include "ble_fizz_buzz.h"
+
 
 #define DEVICE_NAME                     "Nordic_Template"                       /**< Name of device. Will be included in the advertising data. */
 #define MANUFACTURER_NAME               "NordicSemiconductor"                   /**< Manufacturer. Will be passed to Device Information Service. */
@@ -114,7 +117,9 @@
 
 NRF_BLE_GATT_DEF(m_gatt);                                                       /**< GATT module instance. */
 NRF_BLE_QWR_DEF(m_qwr);                                                         /**< Context for the Queued Write module.*/
+BLE_FIZZ_BUZZ_DEF(m_fizz_buzz);
 BLE_ADVERTISING_DEF(m_advertising);                                             /**< Advertising module instance. */
+
 
 static uint16_t m_conn_handle = BLE_CONN_HANDLE_INVALID;                        /**< Handle of the current connection. */
 
@@ -125,7 +130,7 @@ static uint16_t m_conn_handle = BLE_CONN_HANDLE_INVALID;                        
 // YOUR_JOB: Use UUIDs for service(s) used in your application.
 static ble_uuid_t m_adv_uuids[] =                                               /**< Universally unique service identifiers. */
 {
-    {BLE_UUID_DEVICE_INFORMATION_SERVICE, BLE_UUID_TYPE_BLE}
+    {FIZZ_BUZZ_SERVICE_UUID, BLE_UUID_TYPE_VENDOR_BEGIN}
 };
 
 
@@ -145,28 +150,8 @@ static void advertising_start(bool erase_bonds);
  */
 void assert_nrf_callback(uint16_t line_num, const uint8_t * p_file_name)
 {
+    NRF_LOG_INFO("assert nrf callback");
     app_error_handler(DEAD_BEEF, line_num, p_file_name);
-}
-
-
-/**@brief Function for handling Peer Manager events.
- *
- * @param[in] p_evt  Peer Manager event.
- */
-static void pm_evt_handler(pm_evt_t const * p_evt)
-{
-    pm_handler_on_pm_evt(p_evt);
-    pm_handler_flash_clean(p_evt);
-
-    switch (p_evt->evt_id)
-    {
-        case PM_EVT_PEERS_DELETE_SUCCEEDED:
-            advertising_start(false);
-            break;
-
-        default:
-            break;
-    }
 }
 
 
@@ -242,10 +227,7 @@ static void gatt_init(void)
  *
  * @param[in]   nrf_error   Error code containing information about what went wrong.
  */
-static void nrf_qwr_error_handler(uint32_t nrf_error)
-{
-    APP_ERROR_HANDLER(nrf_error);
-}
+
 
 
 /**@brief Function for handling the YYY Service events.
@@ -279,12 +261,11 @@ static void on_yys_evt(ble_yy_service_t     * p_yy_service,
 static void services_init(void)
 {
     ret_code_t         err_code;
-    nrf_ble_qwr_init_t qwr_init = {0};
+    ble_fizz_buzz_init_t fizz_buzz_init;
 
-    // Initialize Queued Write Module.
-    qwr_init.error_handler = nrf_qwr_error_handler;
+    memset(&fizz_buzz_init, 0, sizeof(fizz_buzz_init));
 
-    err_code = nrf_ble_qwr_init(&m_qwr, &qwr_init);
+    err_code = ble_fizz_buzz_init(&m_fizz_buzz, &fizz_buzz_init);
     APP_ERROR_CHECK(err_code);
 
     /* YOUR_JOB: Add code to initialize the services used by the application.
@@ -324,6 +305,7 @@ static void services_init(void)
  */
 static void on_conn_params_evt(ble_conn_params_evt_t * p_evt)
 {
+    NRF_LOG_INFO("on connection parameters event");
     ret_code_t err_code;
 
     if (p_evt->evt_type == BLE_CONN_PARAMS_EVT_FAILED)
@@ -408,6 +390,7 @@ static void sleep_mode_enter(void)
  */
 static void on_adv_evt(ble_adv_evt_t ble_adv_evt)
 {
+    NRF_LOG_INFO("on advertising event");
     ret_code_t err_code;
 
     switch (ble_adv_evt)
@@ -435,6 +418,7 @@ static void on_adv_evt(ble_adv_evt_t ble_adv_evt)
  */
 static void ble_evt_handler(ble_evt_t const * p_ble_evt, void * p_context)
 {
+    NRF_LOG_INFO("BLE EVENT Handler called.");
     ret_code_t err_code = NRF_SUCCESS;
 
     switch (p_ble_evt->header.evt_id)
@@ -514,39 +498,6 @@ static void ble_stack_init(void)
 }
 
 
-/**@brief Function for the Peer Manager initialization.
- */
-static void peer_manager_init(void)
-{
-    ble_gap_sec_params_t sec_param;
-    ret_code_t           err_code;
-
-    err_code = pm_init();
-    APP_ERROR_CHECK(err_code);
-
-    memset(&sec_param, 0, sizeof(ble_gap_sec_params_t));
-
-    // Security parameters to be used for all security procedures.
-    sec_param.bond           = SEC_PARAM_BOND;
-    sec_param.mitm           = SEC_PARAM_MITM;
-    sec_param.lesc           = SEC_PARAM_LESC;
-    sec_param.keypress       = SEC_PARAM_KEYPRESS;
-    sec_param.io_caps        = SEC_PARAM_IO_CAPABILITIES;
-    sec_param.oob            = SEC_PARAM_OOB;
-    sec_param.min_key_size   = SEC_PARAM_MIN_KEY_SIZE;
-    sec_param.max_key_size   = SEC_PARAM_MAX_KEY_SIZE;
-    sec_param.kdist_own.enc  = 1;
-    sec_param.kdist_own.id   = 1;
-    sec_param.kdist_peer.enc = 1;
-    sec_param.kdist_peer.id  = 1;
-
-    err_code = pm_sec_params_set(&sec_param);
-    APP_ERROR_CHECK(err_code);
-
-    err_code = pm_register(pm_evt_handler);
-    APP_ERROR_CHECK(err_code);
-}
-
 
 /**@brief Clear bond information from persistent storage.
  */
@@ -567,6 +518,7 @@ static void delete_bonds(void)
  */
 static void bsp_event_handler(bsp_event_t event)
 {
+    NRF_LOG_INFO("BSP Event Handler");
     ret_code_t err_code;
 
     switch (event)
@@ -714,10 +666,15 @@ int main(void)
     ble_stack_init();
     gap_params_init();
     gatt_init();
-    advertising_init();
+        
     services_init();
+    NRF_LOG_INFO("SERVICES INTI");
+    //<>
+    advertising_init();
+    NRF_LOG_INFO("adve inti");
+    
     conn_params_init();
-    peer_manager_init();
+    //peer_manager_init();
 
     // Start execution.
     NRF_LOG_INFO("Template example started.");

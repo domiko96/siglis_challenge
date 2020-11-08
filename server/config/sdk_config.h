@@ -306,7 +306,7 @@
 // <4=> Debug 
 
 #ifndef BLE_BAS_CONFIG_LOG_LEVEL
-#define BLE_BAS_CONFIG_LOG_LEVEL 3
+#define BLE_BAS_CONFIG_LOG_LEVEL 4
 #endif
 
 // <o> BLE_BAS_CONFIG_INFO_COLOR  - ANSI escape code prefix.
@@ -11449,7 +11449,7 @@
 
 // <o> NRF_SDH_BLE_VS_UUID_COUNT - The number of vendor-specific UUIDs. 
 #ifndef NRF_SDH_BLE_VS_UUID_COUNT
-#define NRF_SDH_BLE_VS_UUID_COUNT 0
+#define NRF_SDH_BLE_VS_UUID_COUNT 1
 #endif
 
 // <q> NRF_SDH_BLE_SERVICE_CHANGED  - Include the Service Changed characteristic in the Attribute Table.
