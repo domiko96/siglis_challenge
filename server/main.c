@@ -83,6 +83,12 @@
 #include "nrf_log_default_backends.h"
 #include "ble_fizz_buzz.h"
 
+#include "nrf_gpio.h"
+#include "app_timer.h"
+#include "app_gpiote.h"
+
+
+
 #define DEVICE_NAME                     "Nordic_Template"                       /**< Name of device. Will be included in the advertising data. */
 #define MANUFACTURER_NAME               "NordicSemiconductor"                   /**< Manufacturer. Will be passed to Device Information Service. */
 #define APP_ADV_INTERVAL                6400                                     /**< The advertising interval (in units of 0.625 ms. This value corresponds to 187.5 ms). */
@@ -113,6 +119,13 @@
 
 #define DEAD_BEEF                       0xDEADBEEF                              /**< Value used as error code on stack dump, can be used to identify stack location on stack unwind. */
 
+
+//button gpiote stuff
+#define APP_TIMER_PRESCALER             0                                       // Value of the RTC1 PRESCALER register.
+#define APP_TIMER_MAX_TIMERS            1                                       // Maximum number of simultaneously created timers. 
+#define APP_TIMER_OP_QUEUE_SIZE         2                                       // Size of timer operation queues. 
+#define BUTTON_DEBOUNCE_DELAY           50                                      /*Why not*/
+#define APP_GPIOTE_MAX_USERS            1   
 
 NRF_BLE_GATT_DEF(m_gatt);
 NRF_BLE_QWR_DEF(m_qwr);                                                         /**< GATT module instance. */
@@ -863,7 +876,29 @@ static void advertising_start(bool erase_bonds)
     }
 }
 
-
+static void button_handler(uint8_t pin_no, uint8_t button_action)
+{
+    if(button_action == APP_BUTTON_PUSH)
+    {
+        switch(pin_no)
+        {
+            case BUTTON_1:
+                NRF_LOG_INFO("TADA");
+                break;
+            case BUTTON_2:
+                NRF_LOG_INFO("TADA");
+                break;
+            case BUTTON_3:
+                NRF_LOG_INFO("TADA");
+                break;
+            case BUTTON_4:
+                NRF_LOG_INFO("TADA");
+                break;
+            default:
+                break;
+        }
+    }
+}
 
 
 
@@ -899,6 +934,29 @@ int main(void)
 
     //add timer for led
     app_timer_start(m_fizz_buzz_timer, APP_TIMER_TICKS(500), NULL);
+
+    
+    NRF_LOG_INFO("hierhierhier");
+    // Initializing the buttons.
+    // Button configuration structure.
+    
+    APP_TIMER_INIT(APP_TIMER_PRESCALER, APP_TIMER_MAX_TIMERS, APP_TIMER_OP_QUEUE_SIZE, NULL);
+
+    static app_button_cfg_t p_button[] = {{BUTTON_3, APP_BUTTON_ACTIVE_LOW, NRF_GPIO_PIN_PULLUP, button_handler}};
+    uint32_t err_code;
+    APP_GPIOTE_INIT(APP_GPIOTE_MAX_USERS);
+    NRF_LOG_INFO("hierhierhier v.2.9");
+
+    err_code = app_button_init(p_button, sizeof(p_button) / sizeof(p_button[0]), BUTTON_DEBOUNCE_DELAY);
+    APP_ERROR_CHECK(err_code);
+
+    NRF_LOG_INFO("button init");
+
+
+    // Enabling the buttons.										
+    err_code = app_button_enable();
+    APP_ERROR_CHECK(err_code);
+    NRF_LOG_INFO("button enabled");
 
     // Enter main loop.
     for (;;)
